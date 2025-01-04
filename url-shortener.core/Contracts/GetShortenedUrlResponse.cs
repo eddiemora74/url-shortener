@@ -10,7 +10,7 @@ public class GetShortenedUrlResponse
     public DateTime CreatedAt { get; }
     public DateTime UpdatedAt { get; }
 
-    private GetShortenedUrlResponse(Guid id, Uri url, string shortCode, DateTime createdAt, DateTime updatedAt)
+    internal GetShortenedUrlResponse(Guid id, Uri url, string shortCode, DateTime createdAt, DateTime updatedAt)
     {
         Id = id;
         Url = url;
