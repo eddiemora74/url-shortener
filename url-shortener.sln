@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "url-shortener.api", "url-sh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "url-shortener.core", "url-shortener.core\url-shortener.core.csproj", "{B3F15DA0-819F-4013-86F8-F9CA0873AF49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "url-shortener.webapp", "url-shortener.webapp\url-shortener.webapp.csproj", "{A8CE95C7-E6B2-41FD-8CEA-6F0A9F6A7F17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B3F15DA0-819F-4013-86F8-F9CA0873AF49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3F15DA0-819F-4013-86F8-F9CA0873AF49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3F15DA0-819F-4013-86F8-F9CA0873AF49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8CE95C7-E6B2-41FD-8CEA-6F0A9F6A7F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8CE95C7-E6B2-41FD-8CEA-6F0A9F6A7F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8CE95C7-E6B2-41FD-8CEA-6F0A9F6A7F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8CE95C7-E6B2-41FD-8CEA-6F0A9F6A7F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
