@@ -16,4 +16,21 @@
         <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\sample-data\weather.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\libs\bootstrap@5.3.3\css\" />
+      <Folder Include="wwwroot\libs\bootstrap@5.3.3\js\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\url-shortener.core\url-shortener.core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="wwwroot\js\app.js" />
+    </ItemGroup>
+
 </Project>

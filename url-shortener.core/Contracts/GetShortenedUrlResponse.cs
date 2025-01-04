@@ -4,11 +4,15 @@ namespace url_shortener.core.Contracts;
 
 public class GetShortenedUrlResponse
 {
-    public Guid Id { get; }
-    public Uri Url { get; }
-    public string ShortCode { get; }
-    public DateTime CreatedAt { get; }
-    public DateTime UpdatedAt { get; }
+    public Guid Id { get; set; }
+    public Uri Url { get; set; }
+    public string ShortCode { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    public GetShortenedUrlResponse()
+    {
+    }
 
     internal GetShortenedUrlResponse(Guid id, Uri url, string shortCode, DateTime createdAt, DateTime updatedAt)
     {

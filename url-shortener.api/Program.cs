@@ -16,6 +16,16 @@ builder.Services.AddCarter();
 builder.Services.AddValidatorsFromAssembly(assembly);
 builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();
+builder.Services.AddCors(options
+    => options.AddPolicy("wasm", policy
+        => policy.WithOrigins(
+            [
+                builder.Configuration["WebApiUrl"] ?? "https://localhost:7287", 
+                builder.Configuration["AppUrl"] ?? "https://localhost:7108"
+            ])
+            .AllowAnyHeader()
+            .AllowAnyMethod()));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -28,6 +38,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("wasm");
 app.MapCarter();
 app.UseHttpsRedirection();
 app.UseRouting();

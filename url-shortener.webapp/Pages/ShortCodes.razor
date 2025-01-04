@@ -1,0 +1,74 @@
+﻿@page "/short-codes"
+@using url_shortener.core.Contracts
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Short Codes</PageTitle>
+
+<h1>Short Codes</h1>
+
+<p class="caption-top">Manage all of your short codes here.</p>
+
+@if (_shortUrlList == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead>
+        <tr>
+            <th>Short Code</th>
+            <th>Maps to</th>
+            <th>Date created</th>
+            <th>Date modified</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var shortUrl in _shortUrlList)
+        {
+            <tr>
+                <td><a href="javascript:void(0);" @onclick="() => CopyShortUrlToClipboard(shortUrl.ShortCode)">
+                    @shortUrl.ShortCode
+                </a></td>
+                <td class="text-nowrap overflow-hidden">@UrlStringFormat(shortUrl.Url)</td>
+                <td>@shortUrl.CreatedAt.ToLocalTime()</td>
+                <td>@shortUrl.UpdatedAt.ToLocalTime()</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<GetShortenedUrlResponse>? _shortUrlList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _shortUrlList = await Http.GetFromJsonAsync<List<GetShortenedUrlResponse>>("api/shorten-list")
+                       ?? [];
+    }
+
+    private string UrlStringFormat(Uri uri)
+    {
+        var urlString = uri.ToString();
+        if (urlString.Length > 50)
+        {
+            return $"{urlString.Substring(0, 50)}...";
+        }
+
+        return urlString;
+    }
+
+    private async Task CopyShortUrlToClipboard(string text)
+    {
+        var urlText = $"{Http.BaseAddress}{text}";
+        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", urlText);
+    }
+}
