@@ -1,0 +1,110 @@
+@page "/short-codes/{ShortCode}"
+@using url_shortener.core.Contracts
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<PageTitle>Edit short code</PageTitle>
+
+
+<div class="row">
+    <div class="col">
+        <button class="btn btn-link" @onclick="HandleBackButtonClick">&lt;&lt; Back</button>
+    </div>
+</div>
+
+<h3>Edit</h3>
+
+@if (_loading)
+{
+    <p class="fw-light fst-italic">Loading...</p>
+} else if (_shortCode is null)
+{
+    <p>Short code does not exist!</p>
+}
+else
+{
+    @switch (_status)
+    {
+        case 1:
+            <div class="alert alert-success" role="alert">
+                Url updated! Redirecting back to list...
+            </div>
+            break;
+        case -1:
+            <div class="alert alert-danger" role="alert">
+                An error has occurred. Please try again.
+            </div>
+            break;
+    }
+
+    <div class="row">
+        <div class="col-sm-4 col-12">
+            <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text" id="inputGroup-sizing-sm">@Http.BaseAddress</span>
+                <input
+                    type="text"
+                    class="form-control disabled"
+                    aria-label="Sizing example input"
+                    aria-describedby="inputGroup-sizing-sm"
+                    disabled="disabled"
+                    value="@_shortCode.ShortCode">
+            </div>
+        </div>
+        <div class="col-sm-8 col-12">
+            <div class="input-group input-group-sm mb-3">
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="e.g. https://www.google.com/" 
+                    aria-label="Short code redirects to..." 
+                    aria-describedby="button-addon2"
+                    @bind-value="@_urlTo">
+                <button 
+                    class="btn btn-outline-secondary" 
+                    type="button" 
+                    id="button-addon2"
+                    @onclick="HandleUpdateButtonClickAsync">Update</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    [Parameter] public string ShortCode { get; set; }
+
+    private GetShortenedUrlStatsResponse? _shortCode;
+    private string _urlTo = string.Empty;
+    private bool _loading = true;
+    private int _status = 0;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        _shortCode = await Http.GetFromJsonAsync<GetShortenedUrlStatsResponse>($"api/shorten/{ShortCode}/stats");
+        _urlTo = _shortCode?.Url.ToString() ?? string.Empty;
+        _loading = false;
+    }
+
+    private async Task HandleUpdateButtonClickAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_urlTo)) return;
+        var updateRequest = UpdateShortenedUrlRequest.Create(_urlTo);
+        var response = await Http.PutAsJsonAsync($"api/shorten/{ShortCode}", updateRequest);
+        if (response.IsSuccessStatusCode)
+        {
+            _status = 1;
+            NavigationManager.NavigateTo("/short-codes");
+        }
+        else
+        {
+            _status = -1;
+        }
+    }
+
+    private void HandleBackButtonClick()
+    {
+        NavigationManager.NavigateTo("/short-codes");
+    }
+}

@@ -4,8 +4,12 @@ namespace url_shortener.core.Contracts;
 
 public class GetShortenedUrlStatsResponse : GetShortenedUrlResponse
 {
-    public int AccessCount { get; }
+    public int AccessCount { get; set; }
 
+    public GetShortenedUrlStatsResponse()
+    {
+    }
+    
     private GetShortenedUrlStatsResponse(Guid id, Uri url, string shortCode, DateTime createdAt, DateTime updatedAt,
         int accessCount)
         : base(id, url, shortCode, createdAt, updatedAt)

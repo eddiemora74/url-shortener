@@ -1,13 +1,19 @@
 ﻿@page "/short-codes"
 @using url_shortener.core.Contracts
+@using url_shortener.webapp.Components
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <PageTitle>Short Codes</PageTitle>
 
 <h1>Short Codes</h1>
 
-<p class="caption-top">Manage all of your short codes here.</p>
+<div class="d-flex justify-content-between align-items-center">
+    <p class="caption-top">Manage all of your short codes here.</p>
+    <button class="btn btn-primary rounded" @onclick="ShowModal">&plus; Add</button>
+</div>
+
 
 @if (_shortUrlList == null)
 {
@@ -38,7 +44,9 @@ else
                 <td>@shortUrl.CreatedAt.ToLocalTime()</td>
                 <td>@shortUrl.UpdatedAt.ToLocalTime()</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                    <button 
+                        class="btn btn-sm btn-outline-primary" 
+                        @onclick="() => NavigateToShortCode(shortUrl.ShortCode)">Edit</button>
                 </td>
             </tr>
         }
@@ -46,8 +54,25 @@ else
     </table>
 }
 
+<AddShortCodeModal @ref="_addCodeModal" Title="Add new code">
+    <Body>
+        <form>
+            <div class="mb-3">
+                <label for="long-url" class="form-label">URL</label>
+                <input @bind="_newCode" type="url" class="form-control" id="long-url" aria-describedby="long-url-help">
+                <div id="long-url-help" class="form-text">This URL must have a valid structure. i.e. starts with http:// or https://</div>
+            </div>
+        </form>
+    </Body>
+    <Footer>
+        <button class="btn btn-primary">Submit</button>
+    </Footer>
+</AddShortCodeModal>
+
 @code {
     private List<GetShortenedUrlResponse>? _shortUrlList;
+    private AddShortCodeModal? _addCodeModal;
+    private string _newCode = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,5 +95,22 @@ else
     {
         var urlText = $"{Http.BaseAddress}{text}";
         await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", urlText);
+    }
+
+    private async Task NavigateToShortCode(string shortCode)
+    {
+        NavigationManager.NavigateTo($"/short-codes/{shortCode}");
+    }
+
+    private void ShowModal()
+    {
+        _addCodeModal?.ShowModal();
+    }
+
+    private async Task AddNewCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newCode)) return;
+        var createRequest = CreateShortenedUrlRequest.Create(_newCode);
+        var response = await Http.PostAsJsonAsync("api/shorten", createRequest);
     }
 }

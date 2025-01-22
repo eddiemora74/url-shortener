@@ -10,3 +10,9 @@ window.clipboardCopy = {
             });
     }
 };
+
+function showModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modalInstance.show();
+}
