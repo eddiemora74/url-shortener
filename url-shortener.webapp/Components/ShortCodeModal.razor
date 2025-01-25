@@ -34,4 +34,10 @@
         var jsRuntime = (IJSInProcessRuntime)JSRuntime;
         jsRuntime.InvokeVoid("showModal", ModalId);
     }
+
+    public void HideModal()
+    {
+        var jsRuntime = (IJSInProcessRuntime)JSRuntime;
+        jsRuntime.InvokeVoid("hideModal", ModalId);
+    }
 }

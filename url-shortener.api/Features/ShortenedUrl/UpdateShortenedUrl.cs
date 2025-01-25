@@ -65,6 +65,9 @@ public static class UpdateShortenedUrl
                     .ExecuteUpdateAsync(c =>
                         c.SetProperty(p => p.UpdatedAt, urlEntry.UpdatedAt)
                             .SetProperty(p => p.Url, urlEntry.Url), cancellationToken);
+                await context.ShortenedUrlVisits
+                    .Where(x => x.ShortenedUrl.ShortCode.Equals(request.ShortCode))
+                    .ExecuteDeleteAsync(cancellationToken);
                 return Result.Success(GetShortenedUrlResponse.Create(urlEntry));
             }
             catch (Exception e)

@@ -46,7 +46,7 @@ else
                 <td>
                     <button 
                         class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => NavigateToShortCode(shortUrl.ShortCode)">Edit</button>
+                        @onclick="() => HandleEditShortCodeAsync(shortUrl.ShortCode)">Edit</button>
                 </td>
             </tr>
         }
@@ -54,32 +54,83 @@ else
     </table>
 }
 
-<AddShortCodeModal @ref="_addCodeModal" Title="Add new code">
+<ShortCodeModal @ref="_addCodeModal" Title="Add new code">
     <Body>
-        <form>
-            <div class="mb-3">
-                <label for="long-url" class="form-label">URL</label>
-                <input @bind="_newCode" type="url" class="form-control" id="long-url" aria-describedby="long-url-help">
-                <div id="long-url-help" class="form-text">This URL must have a valid structure. i.e. starts with http:// or https://</div>
-            </div>
-        </form>
+    <form>
+        <div class="mb-3">
+            <label for="long-url" class="form-label">URL</label>
+            <input @bind="_newCode" type="url" class="form-control" id="long-url" aria-describedby="long-url-help">
+            <div id="long-url-help" class="form-text">This URL must have a valid structure. i.e. starts with http:// or https://</div>
+        </div>
+    </form>
     </Body>
     <Footer>
-        <button class="btn btn-primary">Submit</button>
+        <button class="btn btn-primary" @onclick="AddNewCodeAsync">Submit</button>
     </Footer>
-</AddShortCodeModal>
+</ShortCodeModal>
+
+
+<ShortCodeModal @ref="_editCodeModal" Title="Edit code">
+    <Body>
+    <form>
+        <div class="mb-3">
+            <label for="edit-short-code" class="form-label">Shortcode URL</label>
+            <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text" id="inputGroup-sizing-sm">@Http.BaseAddress</span>
+                <input
+                    id="edit-short-code"
+                    type="text"
+                    class="form-control disabled"
+                    disabled="disabled"
+                    value="@_editShortenedUrl.ShortCode"
+                    aria-describedby="edit-short-code-help">
+                <div id="edit-short-code-help" class="form-text">This is the short code assigned to this shortcut.</div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="edit-long-url" class="form-label">URL</label>
+            <input @bind="_editCode" type="url" class="form-control" id="edit-long-url" aria-describedby="edit-long-url-help">
+            <div id="edit-long-url-help" class="form-text">This URL must have a valid structure. i.e. starts with http:// or https://</div>
+        </div>
+        <div>
+            <p>Count of times accessed: <strong>@_editShortenedUrl.AccessCount</strong></p>
+            <p>NOTE: Any edits to your code will reset the access counts.</p>
+        </div>
+    </form>
+    </Body>
+    <Footer>
+        <button class="btn btn-danger" @onclick="() => DeleteCodeAsync(_editShortenedUrl.ShortCode)">Delete</button>
+        <button class="btn btn-primary" @onclick="EditCodeAsync">Save</button>
+    </Footer>
+</ShortCodeModal>
+
+<ToastContainer @ref="_toastContainer">
+    <Header>@_toastHeaderMessage</Header>
+    <Body>@_toastBodyMessage</Body>
+</ToastContainer>
 
 @code {
     private List<GetShortenedUrlResponse>? _shortUrlList;
-    private AddShortCodeModal? _addCodeModal;
+    private ShortCodeModal? _addCodeModal;
+    private ShortCodeModal? _editCodeModal;
     private string _newCode = string.Empty;
+    private string _editCode = string.Empty;
+    private GetShortenedUrlStatsResponse _editShortenedUrl = new();
+    private string _toastHeaderMessage = string.Empty;
+    private string _toastBodyMessage = string.Empty;
+    private ToastContainer? _toastContainer;
 
     protected override async Task OnInitializedAsync()
     {
-        _shortUrlList = await Http.GetFromJsonAsync<List<GetShortenedUrlResponse>>("api/shorten-list")
-                       ?? [];
+        await HydrateShortCodeListAsync();
     }
 
+    private async Task HydrateShortCodeListAsync()
+    {
+        _shortUrlList = await Http.GetFromJsonAsync<List<GetShortenedUrlResponse>>("api/shorten-list")
+                        ?? [];
+    }
+    
     private string UrlStringFormat(Uri uri)
     {
         var urlString = uri.ToString();
@@ -95,11 +146,19 @@ else
     {
         var urlText = $"{Http.BaseAddress}{text}";
         await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", urlText);
+        _toastHeaderMessage = "Copy success!";
+        _toastBodyMessage = "The URL has been copied to your clipboard.";
+        _toastContainer?.Trigger();
     }
 
-    private async Task NavigateToShortCode(string shortCode)
+    private async Task HandleEditShortCodeAsync(string editCode)
     {
-        NavigationManager.NavigateTo($"/short-codes/{shortCode}");
+        _editShortenedUrl = await Http.GetFromJsonAsync<GetShortenedUrlStatsResponse>($"api/shorten/{editCode}/stats");
+        if (_editShortenedUrl is not null)
+        {
+            _editCode = _editShortenedUrl.Url.ToString();
+        }
+        _editCodeModal?.ShowModal();
     }
 
     private void ShowModal()
@@ -107,10 +166,48 @@ else
         _addCodeModal?.ShowModal();
     }
 
+    private void HideAddModal()
+    {
+        _addCodeModal?.HideModal();
+    }
+    
+    private void HideEditModal()
+    {
+        _editCodeModal?.HideModal();
+    }
+
     private async Task AddNewCodeAsync()
     {
         if (string.IsNullOrWhiteSpace(_newCode)) return;
         var createRequest = CreateShortenedUrlRequest.Create(_newCode);
         var response = await Http.PostAsJsonAsync("api/shorten", createRequest);
+        HideAddModal();
+        TriggerToast("Success!", "Your new short code has been created.");
+        await HydrateShortCodeListAsync();
+    }
+
+    private async Task EditCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editCode) || _editShortenedUrl is null) return;
+        var editRequest = UpdateShortenedUrlRequest.Create(_editCode);
+        var response = await Http.PutAsJsonAsync($"api/shorten/{_editShortenedUrl.ShortCode}", editRequest);
+        HideEditModal();
+        TriggerToast("Success!", "Your short code has been edited successfully.");
+        await HydrateShortCodeListAsync();
+    }
+
+    private async Task DeleteCodeAsync(string shortCode)
+    {
+        var response = await Http.DeleteAsync($"api/shorten/{shortCode}");
+        HideEditModal();
+        TriggerToast("Success!", "Your short code has been deleted.");
+        await HydrateShortCodeListAsync();
+    }
+
+    private void TriggerToast(string header, string body)
+    {
+        _toastHeaderMessage = header;
+        _toastBodyMessage = body;
+        _toastContainer?.Trigger();
     }
 }
